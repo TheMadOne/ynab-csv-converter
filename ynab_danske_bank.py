@@ -41,32 +41,31 @@ class Transaction_DK(object):
         i = '{}'.format(self.Inflow) if self.Inflow > 0.0 else ''
         s = '{!s},{!s},{!s},{!s},{},{}'.format(self.Date, self.Payee.replace(',',''), self.Category, self.Memo, o, i)
         return s
-    
+        
     def qif(self):
         c = '*' if self.Cleared else ' '
-        s = 'D{}\nT{:+.2f}\nP{}\nC{}\n^\n'.format(self.Date, self.flow, self.Payee, c)
+        s = 'D{}\nT{:+.2f}\nP{}\nM{}\nC{}\n^\n'.format(self.Date, self.flow, self.Payee, self.Memo, c)
         return s
     
 
 def reader(line, filter=True, stats=('Udført',), cleared=('Udført',), notcleared=('Venter',), verbose=0, lineno=0):
     line = [s.strip('"') for s in line.rstrip().split(';')]
-    text = line[1]
+    text = line[1].replace('\\','')
     memo = ''
     if text.startswith('DK-NOTA'):
         memo = text[:13]
         text = text[13:]
-    if text.startswith('MobilePay: '):
+    if text.startswith('MobilePay: ') or text.startswith('MOBILEPAY: ') :
         memo = 'MobilePay'
         text = text[10:]
-    startPos = text.find("))))") 
+    startPos = text.find(" )))) ") 
     if startPos != -1 :
         text = text[:startPos]
+        memo = memo + "Wireless"
     t = Transaction_DK(line[0], text, amount_str=line[2], Memo=memo, Cleared=True)
     return t
 
-    t = Transaction_DK(line[0], line[1], amount_str=line[2], Cleared=is_cleared)
-    return t
-
+   
 '''
 
 '''
